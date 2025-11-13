@@ -9,11 +9,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add MVC controllers and views
 builder.Services.AddControllersWithViews();
 
+// Add Razor Pages support
+builder.Services.AddRazorPages();
+
 // Configure EF Core DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure JWT Authentication
+// Configure JWT Authentication (your existing code)
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
 
@@ -24,7 +27,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false; // Set true in production
+    options.RequireHttpsMetadata = false;
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -38,7 +41,6 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 
-    // Allow reading token from cookies
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -74,9 +76,12 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Default route
+// Map MVC controllers
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Login}/{id?}");
+
+// Map Razor Pages
+app.MapRazorPages();
 
 app.Run();
