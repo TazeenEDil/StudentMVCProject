@@ -12,7 +12,7 @@ using StudentManagement.Data;
 namespace StudentManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251113184118_InitialCreate")]
+    [Migration("20251115160208_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -83,9 +83,16 @@ namespace StudentManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("Username")
                         .IsUnique();
 
                     b.ToTable("Users");

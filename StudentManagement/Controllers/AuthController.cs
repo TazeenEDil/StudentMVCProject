@@ -1,120 +1,89 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using StudentManagement.Data;
-using StudentManagement.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using BCrypt.Net;
+using StudentManagement.DTOs.Auth;    // your DTOs (RegisterRequestDto, LoginRequestDto, AuthResponseDto)
+using StudentManagement.Interfaces.Services;
 
 namespace StudentManagement.Controllers
 {
     public class AuthController : Controller
     {
-        private readonly AppDbContext _context;
-        private readonly IConfiguration _configuration;
-
-        public AuthController(AppDbContext context, IConfiguration configuration)
+        private readonly IAuthService _authService;
+        public AuthController(IAuthService authService)
         {
-            _context = context;
-            _configuration = configuration;
+            _authService = authService;
         }
 
-        // REGISTER (GET)
+        // GET: /Account/Register
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
 
-        // REGISTER (POST)
+        // POST: /Account/Register
         [HttpPost]
-        public async Task<IActionResult> Register(User model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterRequestDto dto)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(dto);
 
-            if (await _context.Users.AnyAsync(u => u.Email == model.Email))
+            var result = await _authService.RegisterAsync(dto);
+
+            if (result == null)
             {
-                ViewBag.Error = "Email already registered.";
-                return View(model);
+                // registration failed (e.g. username exists)
+                ModelState.AddModelError(string.Empty, "Registration failed — username/email may already exist.");
+                return View(dto);
             }
 
-            // Hash password
-            model.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.PasswordHash);
-
-            _context.Users.Add(model);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction("Login");
+            // Do NOT auto-login. Redirect to Login page as requested.
+            TempData["Info"] = "Registration successful. Please log in.";
+            return RedirectToAction(nameof(Login));
         }
 
-        // LOGIN (GET)
+        // GET: /Account/Login
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
 
-        // LOGIN (POST)
+        // POST: /Account/Login
         [HttpPost]
-        public async Task<IActionResult> Login(string email, string password)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginRequestDto dto)
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+        {
+            if (!ModelState.IsValid) return View(dto);
+
+            var result = await _authService.LoginAsync(dto);
+            if (result == null)
             {
-                ViewBag.Error = "Invalid email or password.";
-                return View();
+                ModelState.AddModelError(string.Empty, "Invalid credentials.");
+                return View(dto);
             }
 
-            // Generate JWT token
-            var token = GenerateJwtToken(user);
-
-            // You can store token in cookies or return it as JSON for APIs
-            Response.Cookies.Append("jwt", token, new CookieOptions
+            // store JWT in a secure HTTP-only cookie named "jwt"
+            Response.Cookies.Append("jwt", result.Token, new CookieOptions
             {
                 HttpOnly = true,
-                Expires = DateTime.UtcNow.AddHours(1)
+                Secure = true, // set true for https
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddHours(8)
             });
 
-            // Redirect by role
-            if (user.Role == "Admin")
-                return RedirectToAction("Dashboard", "Admin");
+            // Redirect based on role to Students list by default
+            if (result.Role == "Admin")
+                return RedirectToAction("Index", "Students");
             else
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Students");
         }
 
+        // GET: /Account/Logout
         public IActionResult Logout()
         {
             Response.Cookies.Delete("jwt");
-            return RedirectToAction("Login");
+            return RedirectToAction("Index", "Home");
         }
 
-        // ------------------------ HELPER FUNCTION ------------------------
-
-        private string GenerateJwtToken(User user)
-        {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
-                new Claim("UserId", user.Id.ToString())
-            };
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
     }
 }

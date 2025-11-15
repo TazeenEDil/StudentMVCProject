@@ -2,23 +2,35 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using StudentManagement.Data;
+using StudentManagement.Interfaces;
+using StudentManagement.Interfaces.Persistence;
+using StudentManagement.Interfaces.Services;
+using StudentManagement.Repositories;
+using StudentManagement.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add MVC controllers and views
+// Add configuration for JWT (in appsettings.json)
 builder.Services.AddControllersWithViews();
 
-// Add Razor Pages support
-builder.Services.AddRazorPages();
-
-// Configure EF Core DbContext
+// DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure JWT Authentication (your existing code)
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
+// Repositories
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Services
+builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// JWT Authentication
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -31,16 +43,16 @@ builder.Services.AddAuthentication(options =>
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
-        ValidIssuer = jwtSettings["Issuer"],
         ValidateAudience = true,
-        ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
     };
 
+    // read token from cookie named "jwt" to support cookie login flow
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -55,33 +67,22 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Add Authorization
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
 }
-
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
-// JWT Middleware
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Map MVC controllers
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}");
-
-// Map Razor Pages
-app.MapRazorPages();
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

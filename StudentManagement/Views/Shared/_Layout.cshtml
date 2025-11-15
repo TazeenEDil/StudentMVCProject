@@ -11,26 +11,52 @@
 </head>
 <body>
     <header>
-        <ul class="navbar-nav ms-auto">
-            @if (User.Identity.IsAuthenticated)
-            {
-                <li class="nav-item">
-                    <a class="nav-link" href="/Students">
-                        <i class="fas fa-users me-1"></i>Students
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <span class="nav-link">
-                        <i class="fas fa-user me-1"></i>@User.FindFirst("email")?.Value
-                    </span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/Auth/Logout">
-                        <i class="fas fa-sign-out-alt me-1"></i>Logout
-                    </a>
-                </li>
-            }
-        </ul>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">StudentMgmt</a>
+
+                <div class="collapse navbar-collapse">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Students" asp-action="Index">Students</a>
+                            </li>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <!-- Admin-only CRUD links -->
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Students" asp-action="Create">Create Student</a>
+                                </li>
+                                <!-- You can add more admin links here -->
+                            }
+                        }
+                    </ul>
+
+                    <ul class="navbar-nav">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <span class="navbar-text">Hello, @User.Identity.Name</span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Auth" asp-action="Logout">Logout</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Auth" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Auth" asp-action="Register">Register</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
 
     </header>
     <div class="container">

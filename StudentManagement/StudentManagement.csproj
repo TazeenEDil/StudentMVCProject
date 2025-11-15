@@ -27,4 +27,8 @@
     <Folder Include="Migrations\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="DTOs\Students\CreateStudentDto.Partial.cs" />
+  </ItemGroup>
+
 </Project>

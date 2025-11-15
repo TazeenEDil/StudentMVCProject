@@ -1,21 +1,32 @@
-﻿@{
+﻿@model StudentManagement.DTOs.Auth.LoginRequestDto
+@{
     ViewData["Title"] = "Login";
 }
+
 <h2>Login</h2>
 
-<form method="post" asp-action="Login">
-    <div>
-        <label>Email</label>
-        <input type="email" name="email" required />
+@if (TempData["Info"] != null) {
+    <div class="alert alert-success">@TempData["Info"]</div>
+}
+
+<form asp-action="Login" method="post">
+    <div asp-validation-summary="ModelOnly"></div>
+
+    <div class="form-group">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" />
     </div>
-    <div>
-        <label>Password</label>
-        <input type="password" name="password" required />
+    <div class="form-group">
+        <label asp-for="Password"></label>
+        <input asp-for="Password" type="password" class="form-control" />
     </div>
-    <button type="submit">Login</button>
+    <button class="btn btn-primary" type="submit">Login</button>
 </form>
 
-@if (ViewBag.Error != null)
-{
-    <p style="color:red">@ViewBag.Error</p>
+<p>
+    Don't have an account? <a asp-action="Register">Register here</a>.
+</p>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

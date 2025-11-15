@@ -1,135 +1,102 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using StudentManagement.Data;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using StudentManagement.DTOs.Students;
+using StudentManagement.Interfaces;
+using StudentManagement.Interfaces.Services;
 using StudentManagement.Models;
-using StudentManagement.Filters;
 
 namespace StudentManagement.Controllers
 {
+    [Authorize]
     public class StudentsController : Controller
     {
-        private readonly AppDbContext _context;
-
-        public StudentsController(AppDbContext context)
+        private readonly IStudentService _studentService;
+        public StudentsController(IStudentService studentService)
         {
-            _context = context;
+            _studentService = studentService;
         }
 
-        // Anyone logged in (Admin or Student) can view
-        [RoleAuthorize("Admin", "Student")]
+        // GET: /Students
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var students = await _context.Students.ToListAsync();
+            var students = await _studentService.GetAllStudentsAsync();
             return View(students);
         }
 
-        [RoleAuthorize("Admin", "Student")]
-        public async Task<IActionResult> Details(int? id)
+        // GET: /Students/Details/5
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null) return NotFound();
+            var students = await _studentService.GetStudentByIdAsync(id);
+            if (students == null) return NotFound();
+            return View(students);
+        }
 
-            var student = await _context.Students.FirstOrDefaultAsync(m => m.Id == id);
+        // GET: /Students/Create
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public IActionResult Create() => View();
+
+        // POST: /Students/Create
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create(CreateStudentDto dto)
+        {
+            if (!ModelState.IsValid) return View(dto);
+            await _studentService.CreateStudentAsync(dto);
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: /Students/Edit/5
+        // GET: Students/Edit/5
+        public async Task<IActionResult> Edit(int id)
+        {
+            var student = await _studentService.GetStudentByIdAsync(id);
             if (student == null) return NotFound();
-
             return View(student);
         }
 
-        // CREATE – Only Admins
-        [RoleAuthorize("Admin")]
-        public IActionResult Create()
-        {
-            return View();
-        }
-
+        // POST: Students/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RoleAuthorize("Admin")]
-        public async Task<IActionResult> Create([Bind("Id,Name,Email,RegistrationNumber,DateOfBirth,Department")] Student student)
+        public async Task<IActionResult> Edit(Student student)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View(student);
+
+            var updated = await _studentService.UpdateStudentAsync(new UpdateStudentDto
             {
-                try
-                {
-                    _context.Add(student);
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = "Student created successfully!";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateException)
-                {
-                    ModelState.AddModelError("RegistrationNumber", "This registration number already exists.");
-                }
-            }
-            return View(student);
+                Id = student.Id,
+                Name = student.Name,
+                Email = student.Email,
+                RegistrationNumber = student.RegistrationNumber,
+                DateOfBirth = student.DateOfBirth,
+                Department = student.Department
+            });
+
+            if (updated == null) return NotFound();
+
+            return RedirectToAction(nameof(Index));
         }
 
-        // EDIT – Only Admins
-        [RoleAuthorize("Admin")]
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null) return NotFound();
 
-            var student = await _context.Students.FindAsync(id);
+        // GET: Students/Delete/5
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var student = await _studentService.GetStudentByIdAsync(id);
             if (student == null) return NotFound();
-
             return View(student);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [RoleAuthorize("Admin")]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Email,RegistrationNumber,DateOfBirth,Department")] Student student)
-        {
-            if (id != student.Id) return NotFound();
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(student);
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = "Student updated successfully!";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Students.Any(e => e.Id == student.Id))
-                        return NotFound();
-                    throw;
-                }
-                catch (DbUpdateException)
-                {
-                    ModelState.AddModelError("RegistrationNumber", "This registration number already exists.");
-                }
-            }
-            return View(student);
-        }
-
-        // DELETE – Only Admins
-        [RoleAuthorize("Admin")]
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var student = await _context.Students.FirstOrDefaultAsync(m => m.Id == id);
-            if (student == null) return NotFound();
-
-            return View(student);
-        }
+        // POST: Students/DeleteConfirmed
 
         [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [RoleAuthorize("Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var student = await _context.Students.FindAsync(id);
-            if (student != null)
-            {
-                _context.Students.Remove(student);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Student deleted successfully!";
-            }
-
+            await _studentService.DeleteStudentAsync(id);
             return RedirectToAction(nameof(Index));
         }
     }
