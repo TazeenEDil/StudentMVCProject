@@ -1,0 +1,72 @@
+﻿@model StudentManagement.Models.Student
+@{
+    ViewData["Title"] = "Details";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Student Details</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f9f9f9;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1 {
+            color: #444;
+            margin-bottom: 15px;
+        }
+
+        dl {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        dt {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        dd {
+            margin-left: 0;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #777;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+
+            .btn:hover {
+                background: #555;
+            }
+    </style>
+</head>
+<body>
+    <h1>Student Details</h1>
+    <dl>
+        <dt>Name</dt>
+        <dd>@Model.Name</dd>
+        <dt>Email</dt>
+        <dd>@Model.Email</dd>
+        <dt>Registration Number</dt>
+        <dd>@Model.RegistrationNumber</dd>
+        <dt>Date Of Birth</dt>
+        <dd>@Model.DateOfBirth.ToString("yyyy-MM-dd")</dd>
+        <dt>Department</dt>
+        <dd>@Model.Department</dd>
+    </dl>
+    <a class="btn" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+    <a class="btn" asp-action="Index">Back to List</a>
+</body>
+</html>
