@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using StudentManagement.DTOs.Auth;    // your DTOs (RegisterRequestDto, LoginRequestDto, AuthResponseDto)
+using StudentManagement.DTOs.Auth;
 using StudentManagement.Interfaces.Services;
 
 namespace StudentManagement.Controllers
@@ -26,18 +26,30 @@ namespace StudentManagement.Controllers
         {
             if (!ModelState.IsValid) return View(dto);
 
-            var result = await _authService.RegisterAsync(dto);
-
-            if (result == null)
+            try
             {
-                // registration failed (e.g. username exists)
-                ModelState.AddModelError(string.Empty, "Registration failed — username/email may already exist.");
+                var result = await _authService.RegisterAsync(dto);
+
+                if (result == null)
+                {
+                    ModelState.AddModelError(string.Empty,
+                        "Registration failed — email or username may already exist.");
+                    return View(dto);
+                }
+
+                TempData["Info"] = "Registration successful. Please log in.";
+                return RedirectToAction(nameof(Login));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "An unexpected error occurred during registration. Please try again.");
+
+                // Optional: log the exception somewhere (Serilog, Console, etc.)
+                Console.WriteLine(ex);
+
                 return View(dto);
             }
-
-            // Do NOT auto-login. Redirect to Login page as requested.
-            TempData["Info"] = "Registration successful. Please log in.";
-            return RedirectToAction(nameof(Login));
         }
 
         // GET: /Account/Login
@@ -51,39 +63,55 @@ namespace StudentManagement.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginRequestDto dto)
-
         {
             if (!ModelState.IsValid) return View(dto);
 
-            var result = await _authService.LoginAsync(dto);
-            if (result == null)
+            try
             {
-                ModelState.AddModelError(string.Empty, "Invalid credentials.");
+                var result = await _authService.LoginAsync(dto);
+
+                if (result == null)
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid credentials.");
+                    return View(dto);
+                }
+
+                // Store JWT securely
+                Response.Cookies.Append("jwt", result.Token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.UtcNow.AddHours(8)
+                });
+
+                return RedirectToAction("Index", "Students");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "An error occurred while trying to log in. Please try again.");
+
+                Console.WriteLine(ex); // log exception
+
                 return View(dto);
             }
-
-            // store JWT in a secure HTTP-only cookie named "jwt"
-            Response.Cookies.Append("jwt", result.Token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true, // set true for https
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.AddHours(8)
-            });
-
-            // Redirect based on role to Students list by default
-            if (result.Role == "Admin")
-                return RedirectToAction("Index", "Students");
-            else
-                return RedirectToAction("Index", "Students");
         }
 
         // GET: /Account/Logout
         public IActionResult Logout()
         {
-            Response.Cookies.Delete("jwt");
+            try
+            {
+                Response.Cookies.Delete("jwt");
+            }
+            catch (Exception ex)
+            {
+                // Handle cookie deletion failure (rare but possible)
+                Console.WriteLine(ex);
+            }
+
             return RedirectToAction("Index", "Home");
         }
-
     }
 }

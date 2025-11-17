@@ -15,47 +15,85 @@ namespace StudentManagement.Services
 
         public async Task<Student> CreateStudentAsync(CreateStudentDto dto)
         {
-            var student = new Student
+            try
             {
-                Name = dto.Name,
-                Email = dto.Email,
-                RegistrationNumber = dto.RegistrationNumber,
-                DateOfBirth = dto.DateOfBirth,
-                Department = dto.Department
-            };
+                var student = new Student
+                {
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    RegistrationNumber = dto.RegistrationNumber,
+                    DateOfBirth = dto.DateOfBirth,
+                    Department = dto.Department
+                };
 
-            return await _studentRepository.CreateAsync(student);
+                return await _studentRepository.CreateAsync(student);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error occurred while creating the student.", ex);
+            }
         }
 
         public async Task<bool> DeleteStudentAsync(int id)
         {
-            return await _studentRepository.DeleteAsync(id);
+            try
+            {
+                return await _studentRepository.DeleteAsync(id);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occurred while deleting the student with ID {id}.", ex);
+            }
         }
 
         public async Task<IEnumerable<Student>> GetAllStudentsAsync()
         {
-            return await _studentRepository.GetAllAsync();
+            try
+            {
+                return await _studentRepository.GetAllAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error occurred while retrieving all students.", ex);
+            }
         }
 
         public async Task<Student> GetStudentByIdAsync(int id)
         {
-            return await _studentRepository.GetByIdAsync(id);
+            try
+            {
+                var student = await _studentRepository.GetByIdAsync(id);
+                if (student == null)
+                    throw new Exception($"Student with ID {id} not found.");
+
+                return student;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occurred while retrieving the student with ID {id}.", ex);
+            }
         }
 
         public async Task<Student> UpdateStudentAsync(UpdateStudentDto dto)
         {
-            var existing = await _studentRepository.GetByIdAsync(dto.Id);
-            if (existing == null) return null;
+            try
+            {
+                var existing = await _studentRepository.GetByIdAsync(dto.Id);
+                if (existing == null)
+                    throw new Exception($"Student with ID {dto.Id} not found.");
 
-            existing.Name = dto.Name;
-            existing.Email = dto.Email;
-            existing.RegistrationNumber = dto.RegistrationNumber;
-            existing.DateOfBirth = dto.DateOfBirth;
-            existing.Department = dto.Department;
+                existing.Name = dto.Name;
+                existing.Email = dto.Email;
+                existing.RegistrationNumber = dto.RegistrationNumber;
+                existing.DateOfBirth = dto.DateOfBirth;
+                existing.Department = dto.Department;
 
-            return await _studentRepository.UpdateAsync(existing);
+                return await _studentRepository.UpdateAsync(existing);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occurred while updating the student with ID {dto.Id}.", ex);
+            }
         }
-
-
     }
 }
