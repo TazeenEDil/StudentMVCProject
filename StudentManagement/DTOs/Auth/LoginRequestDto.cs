@@ -1,5 +1,5 @@
 ﻿
-using System.ComponentModel.DataAnnotations;
+
 namespace StudentManagement.DTOs.Auth
 {
     public class LoginRequestDto

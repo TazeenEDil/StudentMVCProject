@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
 namespace StudentManagement.DTOs.Students
 {
     public partial class StudentDto
