@@ -39,8 +39,6 @@ namespace StudentManagement.Services
             if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 return null;
 
-            // Email confirmation removed completely
-
             var token = GenerateJwtToken(user);
 
             return new AuthResponseDto
@@ -50,10 +48,9 @@ namespace StudentManagement.Services
                 Role = user.Role
             };
         }
-
-        // =====================
+       
         // REGISTER
-        // =====================
+      
         public async Task<AuthResponseDto?> RegisterAsync(RegisterRequestDto dto)
         {
             var exists = await _userRepository.GetByEmailAsync(dto.Email);
@@ -70,9 +67,8 @@ namespace StudentManagement.Services
 
             await _userRepository.CreateAsync(user);
 
-            // ===========================
-            // SEND WELCOME EMAIL
-            // ===========================
+            // WELCOME EMAIL
+           
             string emailBody = $@"
                 <h2>Congratulations {user.Username}!</h2>
                 <p>You have registered successfully in <b>Student Management System</b>.</p>
@@ -96,13 +92,12 @@ namespace StudentManagement.Services
             {
                 Email = user.Email,
                 Role = user.Role,
-                Token = null // Login later
+                Token = null 
             };
         }
 
-        // =====================
         // GENERATE JWT TOKEN
-        // =====================
+        
         private string GenerateJwtToken(User user)
         {
             var key = Encoding.UTF8.GetBytes(_jwtSettings.Key);

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StudentManagement.DTOs.Auth;
 using StudentManagement.Interfaces.Services;
-using StudentManagement.Interfaces.Persistence;
+
 
 namespace StudentManagement.Controllers
 {
