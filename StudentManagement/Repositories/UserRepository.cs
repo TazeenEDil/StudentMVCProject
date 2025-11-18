@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StudentManagement.Data;
-using StudentManagement.Interfaces.Persistence;
 using StudentManagement.Models;
 
 namespace StudentManagement.Repositories
@@ -15,37 +14,32 @@ namespace StudentManagement.Repositories
 
         public async Task<User> CreateAsync(User user)
         {
-            try
-            {
-                await _context.Users.AddAsync(user);
-                await _context.SaveChangesAsync();
-                return user;
-            }
-            catch (DbUpdateException ex)
-            {
-                throw new Exception("Database error occurred while creating the user.", ex);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Unexpected error occurred while creating the user.", ex);
-            }
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+            return user;
         }
 
-        public async Task<User> GetByEmailAsync(string email)
+        public async Task<User?> GetByEmailAsync(string email)
         {
-            try
-            {
-                return await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
-            }
-            catch (InvalidOperationException ex)
-            {
-                // SingleOrDefault throws this if more than one user found
-                throw new Exception($"Multiple users found with email: {email}", ex);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Unexpected error occurred while fetching user by email.", ex);
-            }
+            return await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
         }
+
+        public async Task<User?> GetByIdAsync(int id)
+        {
+            return await _context.Users.FindAsync(id);
+        }
+
+        public async Task<User> UpdateAsync(User user)
+        {
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+            return user;
+        }
+
+       
+        
+        }
+
+       
     }
-}
+
