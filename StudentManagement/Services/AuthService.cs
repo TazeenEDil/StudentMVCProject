@@ -1,8 +1,7 @@
 ﻿using BCrypt.Net;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using StudentManagement.DTOs.Auth;
-using StudentManagement.Interfaces.Persistence;
 using StudentManagement.Interfaces.Services;
 using StudentManagement.Models;
 using System.IdentityModel.Tokens.Jwt;
@@ -14,120 +13,118 @@ namespace StudentManagement.Services
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepository;
-        private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
+        private readonly JwtSettings _jwtSettings;
 
-        public AuthService(IUserRepository userRepository, IConfiguration configuration)
+        public AuthService(
+            IUserRepository userRepository,
+            IOptions<JwtSettings> jwtOptions,
+            IEmailService emailService)
         {
             _userRepository = userRepository;
-            _configuration = configuration;
+            _jwtSettings = jwtOptions.Value;
+            _emailService = emailService;
         }
 
-        // LOGIN USING EMAIL + PASSWORD
+        // =====================
+        // LOGIN
+        // =====================
         public async Task<AuthResponseDto?> LoginAsync(LoginRequestDto dto)
         {
-            try
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
+
+            if (user == null)
+                return null;
+
+            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+                return null;
+
+            var token = GenerateJwtToken(user);
+
+            return new AuthResponseDto
             {
-                // Fetch by EMAIL
-                var user = await _userRepository.GetByEmailAsync(dto.Email);
-                if (user == null)
-                    return null;
-
-                // Validate password
-                if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-                    return null;
-
-                // Generate JWT token
-                var token = GenerateJwtToken(user);
-
-                return new AuthResponseDto
-                {
-                    Token = token,
-                    Email = user.Email,
-                    Role = user.Role
-                };
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error occurred while logging in the user.", ex);
-            }
+                Token = token,
+                Email = user.Email,
+                Role = user.Role
+            };
         }
-
-        // REGISTER USER
+       
+        // REGISTER
+      
         public async Task<AuthResponseDto?> RegisterAsync(RegisterRequestDto dto)
         {
-            try
+            var exists = await _userRepository.GetByEmailAsync(dto.Email);
+            if (exists != null)
+                throw new Exception("User already exists");
+
+            var user = new User
             {
-                // Check if email already exists
-                var existing = await _userRepository.GetByEmailAsync(dto.Email);
-                if (existing != null)
-                    throw new Exception("A user with this email already exists.");
+                Username = dto.Username,
+                Email = dto.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                Role = dto.Role
+            };
 
-                // Create user
-                var user = new User
-                {
-                    Username = dto.Username,
-                    Email = dto.Email,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                    Role = dto.Role
-                };
+            await _userRepository.CreateAsync(user);
 
-                var createdUser = await _userRepository.CreateAsync(user);
+            // WELCOME EMAIL
+           
+            string emailBody = $@"
+                <h2>Congratulations {user.Username}!</h2>
+                <p>You have registered successfully in <b>Student Management System</b>.</p>
 
-                // Generate JWT token
-                var token = GenerateJwtToken(createdUser);
+                <h3>Your Login Credentials</h3>
+                <p><b>Email:</b> {user.Email}</p>
+                <p><b>Password:</b> {dto.Password}</p>
 
-                return new AuthResponseDto
-                {
-                    Token = token,
-                    Email = createdUser.Email,
-                    Role = createdUser.Role
-                };
-            }
-            catch (Exception ex)
+                <p>Please keep this information safe.</p>
+                <br/>
+                <p>Regards,<br/>Student Management Team</p>
+            ";
+
+            await _emailService.SendEmailAsync(
+                user.Email,
+                "Registration Successful",
+                emailBody
+            );
+
+            return new AuthResponseDto
             {
-                throw new Exception("Error occurred while registering the user.", ex);
-            }
+                Email = user.Email,
+                Role = user.Role,
+                Token = null 
+            };
         }
 
         // GENERATE JWT TOKEN
+        
         private string GenerateJwtToken(User user)
         {
-            try
+            var key = Encoding.UTF8.GetBytes(_jwtSettings.Key);
+
+            var claims = new List<Claim>
             {
-                var jwtKey = _configuration["Jwt:Key"];
-                var jwtIssuer = _configuration["Jwt:Issuer"];
-                var jwtAudience = _configuration["Jwt:Audience"];
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
 
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.UTF8.GetBytes(jwtKey);
-
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),  // user id
-                    new Claim(ClaimTypes.Email, user.Email),                   // login by email
-                    new Claim(ClaimTypes.Name, user.Username),                 // display username
-                    new Claim(ClaimTypes.Role, user.Role)                      // roles
-                };
-
-                var tokenDescriptor = new SecurityTokenDescriptor
-                {
-                    Subject = new ClaimsIdentity(claims),
-                    Expires = DateTime.UtcNow.AddHours(8),
-                    Issuer = jwtIssuer,
-                    Audience = jwtAudience,
-                    SigningCredentials = new SigningCredentials(
-                        new SymmetricSecurityKey(key),
-                        SecurityAlgorithms.HmacSha256Signature
-                    )
-                };
-
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-                return tokenHandler.WriteToken(token);
-            }
-            catch (Exception ex)
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                throw new Exception("Error occurred while generating JWT token.", ex);
-            }
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes),
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature
+                )
+            };
+
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.CreateToken(tokenDescriptor);
+            return handler.WriteToken(token);
         }
     }
 }

@@ -17,5 +17,7 @@ namespace StudentManagement.Models
 
         [Required]
         public string Role { get; set; } // "Admin" or "Student" (stored as string in DB)
+
+  
     }
 }
