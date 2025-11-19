@@ -1,0 +1,207 @@
+﻿@model IEnumerable<StudentManagement.Models.User>
+
+@{
+    ViewData["Title"] = "All Users";
+}
+
+<div class="container">
+    <h2>All Users</h2>
+    <p class="text-muted">Manage system users - Students and Admins</p>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-error">@TempData["Error"]</div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@user.Id</td>
+                            <td>@user.Username</td>
+                            <td>@user.Email</td>
+                            <td>
+                                @if (user.Role == "Admin")
+                                {
+                                    <span class="badge admin-badge">Admin</span>
+                                }
+                                else
+                                {
+                                    <span class="badge student-badge">Student</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-info">View</a>
+
+                                @if (user.Role == "Student")
+                                {
+                                    <a asp-action="EditStudent" asp-route-id="@user.Id" class="btn btn-warning">Edit</a>
+                                    <a asp-action="DeleteStudent" asp-route-id="@user.Id" class="btn btn-danger">Delete</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Any())
+            {
+                <p class="text-center text-muted">No users found.</p>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f6f8;
+        color: #333;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    h2 {
+        font-size: 2rem;
+        margin-bottom: 5px;
+        color: #2c3e50;
+    }
+
+    .text-muted {
+        color: #7f8c8d;
+        margin-bottom: 20px;
+    }
+
+    .alert {
+        padding: 10px 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        font-size: 0.95rem;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .card {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border: 1px solid #ddd;
+        overflow: hidden;
+        padding: 20px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+    }
+
+    th, td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #e0e0e0;
+        text-align: left;
+        font-size: 0.95rem;
+    }
+
+    th {
+        background-color: #2980b9;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    tr:hover {
+        background-color: #ecf0f1;
+        transition: background 0.2s ease-in-out;
+    }
+
+    .badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .admin-badge {
+        background-color: #e74c3c;
+    }
+
+    .student-badge {
+        background-color: #3498db;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 5px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        color: #fff;
+        margin-right: 5px;
+        transition: background 0.2s ease-in-out, transform 0.1s ease-in-out;
+        cursor: pointer;
+    }
+
+    .btn-info {
+        background-color: #2980b9;
+    }
+
+        .btn-info:hover {
+            background-color: #2471a3;
+            transform: translateY(-1px);
+        }
+
+    .btn-warning {
+        background-color: #e67e22;
+    }
+
+        .btn-warning:hover {
+            background-color: #d35400;
+            transform: translateY(-1px);
+        }
+
+    .btn-danger {
+        background-color: #e74c3c;
+    }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+            transform: translateY(-1px);
+        }
+
+    .text-center {
+        text-align: center;
+    }
+</style>

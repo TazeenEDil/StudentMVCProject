@@ -1,0 +1,190 @@
+﻿@model StudentManagement.Models.Student
+
+@{
+    ViewData["Title"] = "Delete Student";
+    var user = ViewBag.User as StudentManagement.Models.User;
+}
+
+<div class="container">
+    <h2 class="danger-text">Delete Student</h2>
+    <p class="muted-text">Are you sure you want to delete this student?</p>
+
+    <div class="card border-danger">
+        <div class="card-header danger-bg white-text">
+            <h4>⚠️ Warning - This action cannot be undone</h4>
+        </div>
+        <div class="card-body">
+            <h5>User Information</h5>
+            <dl class="info-list">
+                <dt>User ID:</dt>
+                <dd>@user.Id</dd>
+
+                <dt>Username:</dt>
+                <dd>@user.Username</dd>
+
+                <dt>Email:</dt>
+                <dd>@user.Email</dd>
+            </dl>
+
+            @if (Model != null)
+            {
+                <hr />
+                <h5>Student Profile</h5>
+                <dl class="info-list">
+                    <dt>Student ID:</dt>
+                    <dd>@Model.Id</dd>
+
+                    <dt>Name:</dt>
+                    <dd>@Model.Name</dd>
+
+                    <dt>Registration Number:</dt>
+                    <dd>@Model.RegistrationNumber</dd>
+
+                    <dt>Department:</dt>
+                    <dd>@Model.Department</dd>
+
+                    <dt>Date of Birth:</dt>
+                    <dd>@Model.DateOfBirth.ToString("yyyy-MM-dd")</dd>
+                </dl>
+            }
+
+            <div class="alert-warning">
+                <strong>Note:</strong> This will delete both the user account and the student profile permanently.
+            </div>
+
+            <form asp-action="DeleteStudentConfirmed" method="post" class="delete-form">
+                <input type="hidden" name="id" value="@user.Id" />
+                <button type="submit" class="btn btn-danger">Yes, Delete Student</button>
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f4f4;
+        padding: 20px;
+        color: #333;
+    }
+
+    .container {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    h2 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .danger-text {
+        color: #c0392b;
+    }
+
+    .muted-text {
+        color: #7f8c8d;
+        margin-bottom: 20px;
+    }
+
+    .card {
+        background-color: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0e0;
+        margin-top: 10px;
+    }
+
+    .card-header {
+        padding: 15px;
+    }
+
+    .danger-bg {
+        background-color: #c0392b;
+    }
+
+    .white-text {
+        color: white;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    h5 {
+        margin-top: 15px;
+        margin-bottom: 10px;
+        color: #2c3e50;
+    }
+
+    .info-list {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        row-gap: 8px;
+        column-gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .info-list dt {
+        font-weight: 600;
+        color: #34495e;
+    }
+
+    .info-list dd {
+        margin: 0;
+        color: #555;
+    }
+
+    hr {
+        border: none;
+        border-top: 1px solid #ccc;
+        margin: 20px 0;
+    }
+
+    .alert-warning {
+        background-color: #f9e79f;
+        padding: 10px 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        color: #7d6608;
+        font-weight: 500;
+    }
+
+    .delete-form {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: background 0.2s ease-in-out, transform 0.1s ease-in-out;
+    }
+
+    .btn-danger {
+        background-color: #e74c3c;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background-color: #c0392b;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background-color: #95a5a6;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background-color: #7f8c8d;
+        transform: translateY(-1px);
+    }
+</style>

@@ -1,0 +1,204 @@
+﻿@model StudentManagement.Models.User
+
+@{
+    ViewData["Title"] = "User Details";
+    var student = ViewBag.StudentProfile as StudentManagement.Models.Student;
+}
+
+<div class="container">
+    <h2>User Details</h2>
+
+    <div class="card">
+        <div class="card-header">
+            <h4>
+                @Model.Username
+                @if (Model.Role == "Admin")
+                {
+                    <span class="badge admin-badge">Admin</span>
+                }
+                else
+                {
+                    <span class="badge student-badge">Student</span>
+                }
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="info-section">
+                <dl class="info-list">
+                    <dt>User ID:</dt>
+                    <dd>@Model.Id</dd>
+
+                    <dt>Username:</dt>
+                    <dd>@Model.Username</dd>
+
+                    <dt>Email:</dt>
+                    <dd>@Model.Email</dd>
+
+                    <dt>Role:</dt>
+                    <dd>@Model.Role</dd>
+                </dl>
+            </div>
+
+            @if (Model.Role == "Student" && student != null)
+            {
+                <hr />
+                <h5>Student Profile</h5>
+                <div class="info-section">
+                    <dl class="info-list">
+                        <dt>Student ID:</dt>
+                        <dd>@student.Id</dd>
+
+                        <dt>Name:</dt>
+                        <dd>@student.Name</dd>
+
+                        <dt>Reg. Number:</dt>
+                        <dd>@student.RegistrationNumber</dd>
+
+                        <dt>Department:</dt>
+                        <dd>@student.Department</dd>
+
+                        <dt>Date of Birth:</dt>
+                        <dd>@student.DateOfBirth.ToString("yyyy-MM-dd")</dd>
+                    </dl>
+                </div>
+            }
+        </div>
+        <div class="card-footer">
+            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            @if (Model.Role == "Student")
+            {
+                <a asp-action="EditStudent" asp-route-id="@Model.Id" class="btn btn-warning">Edit Student</a>
+                <a asp-action="DeleteStudent" asp-route-id="@Model.Id" class="btn btn-danger">Delete Student</a>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    h2 {
+        font-size: 2rem;
+        margin-bottom: 20px;
+        color: #2c3e50;
+    }
+
+    .card {
+        background-color: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin-top: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .card-header {
+        padding: 15px;
+        background-color: #ecf0f1;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-left: 10px;
+        color: #fff;
+    }
+
+    .admin-badge {
+        background-color: #e74c3c;
+    }
+
+    .student-badge {
+        background-color: #3498db;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .info-section {
+        margin-bottom: 15px;
+    }
+
+    .info-list {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        row-gap: 8px;
+        column-gap: 10px;
+    }
+
+        .info-list dt {
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .info-list dd {
+            margin: 0;
+            color: #555;
+        }
+
+    hr {
+        border: none;
+        border-top: 1px solid #ccc;
+        margin: 20px 0;
+    }
+
+    .card-footer {
+        padding: 15px;
+        background-color: #f7f7f7;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: background 0.2s ease-in-out, transform 0.1s ease-in-out;
+        color: #fff;
+    }
+
+    .btn-secondary {
+        background-color: #95a5a6;
+    }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+            transform: translateY(-1px);
+        }
+
+    .btn-warning {
+        background-color: #f39c12;
+    }
+
+        .btn-warning:hover {
+            background-color: #e67e22;
+            transform: translateY(-1px);
+        }
+
+    .btn-danger {
+        background-color: #e74c3c;
+    }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+            transform: translateY(-1px);
+        }
+</style>
