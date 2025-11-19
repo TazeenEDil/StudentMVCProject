@@ -13,9 +13,8 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ----------------------
+
 // Serilog configuration
-// ----------------------
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .WriteTo.File("logs/app.log", rollingInterval: RollingInterval.Day)
@@ -23,48 +22,37 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// ----------------------
-// Add MVC Controllers
-// ----------------------
+// MVC Controllers
 builder.Services.AddControllersWithViews();
 
-// ----------------------
+
 // Database
-// ----------------------
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ----------------------
 // Repositories
-// ----------------------
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// ----------------------
+
 // Services
-// ----------------------
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
-// ----------------------
 // Email service
-// ----------------------
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-// ----------------------
 // JWT Settings
-// ----------------------
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("JwtSettings"));
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 var keyBytes = Encoding.UTF8.GetBytes(jwtSettings.Key);
 
-// ----------------------
+
 // Authentication
-// ----------------------
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -99,16 +87,12 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// ----------------------
 // Authorization
-// ----------------------
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// ----------------------
 // Middleware pipeline
-// ----------------------
 
 // Global exception handler
 app.UseGlobalExceptionHandler();

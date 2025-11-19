@@ -22,14 +22,16 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Students" asp-action="Index">Students</a>
                             </li>
-
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Users" asp-action="Index">Manage Users</a>
+                            </li>
                             @if (User.IsInRole("Admin"))
                             {
                                 <!-- Admin-only CRUD links -->
                                 <li class="nav-item">
                                     <a class="nav-link" asp-controller="Students" asp-action="Create">Create Student</a>
                                 </li>
-                                <!-- You can add more admin links here -->
+                                
                             }
                         }
                     </ul>
