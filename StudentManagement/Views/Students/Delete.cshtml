@@ -8,65 +8,16 @@
 <head>
     <meta charset="utf-8" />
     <title>Delete Student</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #f9f9f9;
-            padding: 20px;
-        }
-
-        h1 {
-            color: #F44336;
-        }
-
-        form {
-            background: #fff;
-            padding: 20px;
-            max-width: 400px;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
-            border-radius: 5px;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 8px 15px;
-            background: #777;
-            color: white;
-            border-radius: 4px;
-            text-decoration: none;
-            margin-left: 10px;
-        }
-
-            .btn:hover {
-                background: #555;
-            }
-
-        input[type="submit"] {
-            background: #F44336;
-            border: none;
-            color: white;
-            padding: 8px 15px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-            input[type="submit"]:hover {
-                background: #D32F2F;
-            }
-    </style>
 </head>
+
 <body>
     <h1>Confirm Delete</h1>
     <p>Are you sure you want to delete <strong>@Model.Name</strong>?</p>
 
-    <form asp-action="DeleteUser" method="post">
+    <form asp-action="Delete" method="post">
         <input type="hidden" asp-for="Id" />
         <button type="submit" class="btn btn-danger">Delete</button>
         <a class="btn btn-secondary" asp-action="Index">Cancel</a>
     </form>
-
-
 </body>
 </html>
-
-

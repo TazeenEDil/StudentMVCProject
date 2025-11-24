@@ -140,11 +140,24 @@ namespace StudentManagement.Repositories
 
             try
             {
-                _context.Students.Update(student);
+                var existingStudent = await _context.Students.FindAsync(student.Id);
+                if (existingStudent == null)
+                {
+                    _logger.LogWarning("Student not found: {Id}", student.Id);
+                    return null;
+                }
+
+                // Update only allowed fields
+                existingStudent.Name = student.Name;
+                existingStudent.Email = student.Email;
+                existingStudent.RegistrationNumber = student.RegistrationNumber;
+                existingStudent.DateOfBirth = student.DateOfBirth;
+                existingStudent.Department = student.Department;
+
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Student updated successfully: {Id}", student.Id);
-                return student;
+                return existingStudent;
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -162,5 +175,6 @@ namespace StudentManagement.Repositories
                 throw new Exception("Unexpected error occurred while updating student.", ex);
             }
         }
+
     }
 }
