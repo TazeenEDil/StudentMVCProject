@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="DnsClient" Version="1.8.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.DataAnnotations" Version="2.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
@@ -32,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="DTOs\Students\CreateStudentDto.Partial.cs" />
+    <None Include="DTOs\Students\CreateStudentDto.cs" />
   </ItemGroup>
 
 </Project>

@@ -158,6 +158,7 @@ namespace StudentManagement.Controllers
             }
         }
 
+       
         // GET: /Students/Delete/5
         [HttpGet]
         [Authorize(Roles = "Admin")]
@@ -176,35 +177,32 @@ namespace StudentManagement.Controllers
         }
 
         // POST: /Students/Delete/5
-        
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteUser(int id)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try
             {
-                var deleted = await _userRepository.DeleteUserAndStudentAsync(id);
-                if (!deleted)
+                var student = await _studentService.GetStudentByIdAsync(id);
+                if (student == null)
                 {
-                    TempData["Error"] = "User not found or could not be deleted.";
+                    TempData["Error"] = "Student not found.";
+                    return RedirectToAction(nameof(Index));
                 }
-                else
-                {
-                    TempData["Success"] = "User and student profile deleted successfully.";
-                }
+
+                // Delete User + Student using Email
+                await _userRepository.DeleteUserAndStudentAsync(student.Id);
+
+                TempData["Success"] = "Student deleted successfully.";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting user ID {Id}", id);
-                TempData["Error"] = "An error occurred while deleting the user.";
+                _logger.LogError(ex, "Error deleting student ID {Id}", id);
+                TempData["Error"] = "Error deleting student.";
             }
 
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
-
-
-
-
-
     }
 }

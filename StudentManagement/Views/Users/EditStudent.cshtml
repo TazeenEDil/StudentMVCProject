@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Edit Student";
     var user = ViewBag.User as StudentManagement.Models.User;
+    var originalEmail = ViewBag.OriginalEmail as string;
 }
 
 <div class="container">
@@ -11,8 +12,9 @@
 
     <div class="card">
         <div class="card-body">
-            <form asp-action="EditStudent" method="post">
+            <form asp-action="EditStudent" asp-controller="Users" method="post">
                 <input type="hidden" asp-for="Id" />
+                <input type="hidden" name="originalEmail" value="@originalEmail" />
 
                 <div class="form-group">
                     <label asp-for="Name"></label>
@@ -56,6 +58,7 @@
         </div>
     </div>
 </div>
+
 
 <style>
     body {

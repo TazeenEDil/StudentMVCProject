@@ -2,6 +2,7 @@
 using StudentManagement.DTOs.Auth;
 using StudentManagement.Interfaces.Services;
 using StudentManagement.Interfaces.Persistence;
+using StudentManagement.Helpers;
 
 namespace StudentManagement.Controllers
 {
@@ -21,6 +22,7 @@ namespace StudentManagement.Controllers
             _userRepository = userRepository;
         }
 
+        // REGISTER (GET)
         [HttpGet]
         public IActionResult Register()
         {
@@ -28,6 +30,7 @@ namespace StudentManagement.Controllers
             return View();
         }
 
+        // REGISTER (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterRequestDto dto)
@@ -40,22 +43,45 @@ namespace StudentManagement.Controllers
 
             try
             {
-                _logger.LogInformation("Attempting registration for email {Email}", dto.Email);
+                _logger.LogInformation("Validating email existence for {Email}...", dto.Email);
 
+                // Validate that email exists and can receive mail
+                if (!await EmailValidator.IsRealEmailAsync(dto.Email))
+                {
+                    ModelState.AddModelError("Email", "This email address does not exist or cannot receive mail.");
+                    _logger.LogWarning("Registration blocked: Email {Email} does not exist or is invalid", dto.Email);
+                    return View(dto);
+                }
+
+                _logger.LogInformation("Email validated successfully. Attempting registration for {Email}", dto.Email);
+
+                // Proceed with registration - this will also save to DB
                 var result = await _authService.RegisterAsync(dto);
-                TempData["Info"] = "Registration successful! Check your email for login credentials.";
 
-                _logger.LogInformation("Registration successful for email {Email}", dto.Email);
+                TempData["Info"] = "Registration successful! Check your email for login credentials.";
+                _logger.LogInformation("User successfully registered and saved to database: {Email}", dto.Email);
+                
                 return RedirectToAction(nameof(Login));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Registration failed for email {Email}", dto.Email);
-                ModelState.AddModelError(string.Empty, ex.Message);
+                
+                // If it's an email-related error, show specific message
+                if (ex.Message.Contains("email", StringComparison.OrdinalIgnoreCase))
+                {
+                    ModelState.AddModelError("Email", ex.Message);
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Registration failed. Please try again.");
+                }
+                
                 return View(dto);
             }
         }
 
+        // LOGIN (GET)
         [HttpGet]
         public IActionResult Login()
         {
@@ -63,6 +89,7 @@ namespace StudentManagement.Controllers
             return View();
         }
 
+        // LOGIN (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginRequestDto dto)
@@ -75,7 +102,19 @@ namespace StudentManagement.Controllers
 
             try
             {
-                _logger.LogInformation("Attempting login for {Email}", dto.Email);
+                _logger.LogInformation("Validating email existence for login attempt: {Email}", dto.Email);
+
+                // NEW: Validate email exists before checking credentials
+                // This prevents login attempts with non-existent emails
+                if (!await EmailValidator.IsRealEmailAsync(dto.Email))
+                {
+                    _logger.LogWarning("Login blocked: Email {Email} does not exist or is invalid", dto.Email);
+                    // Use generic error message to avoid revealing whether email exists in system
+                    ModelState.AddModelError(string.Empty, "Invalid email or password.");
+                    return View(dto);
+                }
+
+                _logger.LogInformation("Email validated. Attempting authentication for {Email}", dto.Email);
 
                 var result = await _authService.LoginAsync(dto);
 
@@ -86,6 +125,7 @@ namespace StudentManagement.Controllers
                     return View(dto);
                 }
 
+                // Set authentication cookie
                 Response.Cookies.Append("jwt", result.Token, new CookieOptions
                 {
                     HttpOnly = true,
@@ -100,11 +140,14 @@ namespace StudentManagement.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Login exception for {Email}", dto.Email);
-                ModelState.AddModelError(string.Empty, ex.Message);
+                
+                // Use generic error message for security
+                ModelState.AddModelError(string.Empty, "An error occurred during login. Please try again.");
                 return View(dto);
             }
         }
 
+        // LOGOUT
         public IActionResult Logout()
         {
             try

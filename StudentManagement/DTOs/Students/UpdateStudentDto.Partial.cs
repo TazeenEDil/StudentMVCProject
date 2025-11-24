@@ -1,15 +1,7 @@
-﻿
-
-namespace StudentManagement.DTOs.Students
+﻿namespace StudentManagement.DTOs.Students
 {
     public partial class UpdateStudentDto : StudentDto
     {
-        public int Id { get; set; } 
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string RegistrationNumber { get; set; }
-        public DateTime DateOfBirth { get; set; }
-        public string Department { get; set; }
+        // Inherits Id, Name, Email, RegistrationNumber, DateOfBirth, Department
     }
 }
-

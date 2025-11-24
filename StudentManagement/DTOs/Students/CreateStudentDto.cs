@@ -1,7 +1,7 @@
 ﻿
 namespace StudentManagement.DTOs.Students
 {
-    public partial class CreateStudentDto : StudentDto
+    public partial class CreateStudentDto
     {
         public string Name { get; set; }
         public string Email { get; set; }
