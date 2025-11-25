@@ -18,6 +18,12 @@ namespace StudentManagement.Repositories
 
         public async Task<Student> CreateAsync(Student student)
         {
+            if (student == null)
+            {
+                _logger.LogWarning("CreateAsync called with null student");
+                throw new ArgumentNullException(nameof(student), "Student cannot be null");
+            }
+
             _logger.LogInformation("Creating student {@Student}", student);
 
             try
@@ -25,20 +31,22 @@ namespace StudentManagement.Repositories
                 await _context.Students.AddAsync(student);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Student created successfully: {Id}", student.Id);
+                _logger.LogInformation("Student created successfully with ID: {Id}", student.Id);
+
                 return student;
             }
             catch (DbUpdateException ex)
             {
                 _logger.LogError(ex, "Database error while creating student {@Student}", student);
-                throw new Exception("Database error while creating student.", ex);
+                throw new Exception("Database error occurred while creating student.", ex);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error while creating student {@Student}", student);
-                throw new Exception("Unexpected error occurred while creating student.", ex);
+                throw;
             }
         }
+
 
         public async Task<bool> DeleteAsync(int id)
         {
@@ -136,6 +144,12 @@ namespace StudentManagement.Repositories
 
         public async Task<Student> UpdateAsync(Student student)
         {
+            if (student == null)
+            {
+                _logger.LogWarning("UpdateAsync called with null student");
+                throw new ArgumentNullException(nameof(student), "Student cannot be null");
+            }
+
             _logger.LogInformation("Updating student {@Student}", student);
 
             try
@@ -175,6 +189,7 @@ namespace StudentManagement.Repositories
                 throw new Exception("Unexpected error occurred while updating student.", ex);
             }
         }
+
 
     }
 }
