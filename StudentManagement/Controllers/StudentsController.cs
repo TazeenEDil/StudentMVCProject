@@ -21,6 +21,7 @@ namespace StudentManagement.Controllers
             _userRepository = userRepository;
             _logger = logger;
         }
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -95,6 +96,7 @@ namespace StudentManagement.Controllers
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             _logger.LogInformation("GET /Students/Edit/{Id}", id);
@@ -158,7 +160,7 @@ namespace StudentManagement.Controllers
             }
         }
 
-       
+
         // GET: /Students/Delete/5
         [HttpGet]
         [Authorize(Roles = "Admin")]
@@ -176,7 +178,7 @@ namespace StudentManagement.Controllers
             return View(student);
         }
 
-        // POST: /Students/Delete/5
+        // POST: /Students/DeleteConfirmed
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
@@ -184,16 +186,29 @@ namespace StudentManagement.Controllers
         {
             try
             {
+                _logger.LogInformation("Attempting to delete student ID {Id}", id);
+
                 var student = await _studentService.GetStudentByIdAsync(id);
                 if (student == null)
                 {
+                    _logger.LogWarning("Student ID {Id} not found for deletion", id);
                     TempData["Error"] = "Student not found.";
                     return RedirectToAction(nameof(Index));
                 }
 
-                // Delete User + Student using Email
-                await _userRepository.DeleteUserAndStudentAsync(student.Id);
+                // Find the user by student's email
+                var user = await _userRepository.GetByEmailAsync(student.Email);
+                if (user == null)
+                {
+                    _logger.LogWarning("User not found for student email {Email}", student.Email);
+                    TempData["Error"] = "Associated user account not found.";
+                    return RedirectToAction(nameof(Index));
+                }
 
+                // Delete User + Student using USER ID (not student ID)
+                await _userRepository.DeleteUserAndStudentAsync(user.Id);
+
+                _logger.LogInformation("Student ID {Id} and User ID {UserId} deleted successfully", id, user.Id);
                 TempData["Success"] = "Student deleted successfully.";
             }
             catch (Exception ex)
