@@ -53,13 +53,13 @@ namespace StudentManagement.Tests.Repositories
             // Assert: Verify student was added
             Assert.NotNull(result);
             Assert.True(result.Id > 0); // ID should be assigned
-            Assert.Equal("Tazeen-E-Dil", result.Name);
+            Assert.Equal("John Doe", result.Name);
             Assert.Equal("john.doe@example.com", result.Email);
 
             // Verify it exists in database
             var savedStudent = await _context.Students.FindAsync(result.Id);
             Assert.NotNull(savedStudent);
-            Assert.Equal("Tazeen-E-Dil", savedStudent.Name);
+            Assert.Equal("John Doe", savedStudent.Name);
         }
 
         [Fact]
