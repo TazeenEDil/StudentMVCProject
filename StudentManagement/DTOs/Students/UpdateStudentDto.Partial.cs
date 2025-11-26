@@ -2,6 +2,6 @@
 {
     public partial class UpdateStudentDto : StudentDto
     {
-        // Inherits Id, Name, Email, RegistrationNumber, DateOfBirth, Department
+        // Inherits from StudentDto
     }
 }
