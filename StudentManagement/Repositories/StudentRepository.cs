@@ -76,7 +76,7 @@ namespace StudentManagement.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error while deleting student with ID {Id}", id);
-                throw;   // preserve stack trace
+                throw;   // preserve trace
             }
         }
 
